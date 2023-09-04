@@ -6,6 +6,7 @@ from torch.nn import functional as F
 from omegaconf import DictConfig, OmegaConf
 
 #cfg = OmegaConf.load('./config/s2s.yamls')
+#TRM input:[B,L,d_model] output: [B,L,d_model]
 
 class CoTRMLayerHalf(nn.TransformerDecoderLayer):
     """ Co-transformer based on transformer decoderlayer.
@@ -53,12 +54,13 @@ class CoTRMLayerHalf(nn.TransformerDecoderLayer):
         # see Fig. 1 of https://arxiv.org/pdf/2002.04745v1.pdf
 
         x = query
+        #print('x size is:', x.shape)
         if self.norm_first:
-            #x = x + self._sa_block(self.norm1(x), query_mask, query_key_padding_mask)
+            x = x + self._sa_block(self.norm1(x), query_mask, query_key_padding_mask)
             x = x + self._mha_block(self.norm2(x), key_value, key_value_mask, key_value_key_padding_mask)
             x = x + self._ff_block(self.norm3(x))
         else:
-            #x = self.norm1(x + self._sa_block(x, query_mask, query_key_padding_mask))
+            x = self.norm1(x + self._sa_block(x, query_mask, query_key_padding_mask))
             x = self.norm2(x + self._mha_block(x, key_value, key_value_mask, key_value_key_padding_mask))
             x = self.norm3(x + self._ff_block(x))
 
@@ -148,6 +150,7 @@ class CoTRMLayer(nn.Module):
             src_mask=seq_mask,
             src_key_padding_mask=seq_padding_mask
         )
+        
         return struct_hidden, seq_hidden, struct_mask, seq_mask, struct_padding_mask, seq_padding_mask
 
 class CoTRM(nn.Module):
@@ -160,4 +163,3 @@ class CoTRM(nn.Module):
         for layer in self.CoTRMLayers:
             input = layer.forward(*input)
         return input
-            

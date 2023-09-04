@@ -140,9 +140,9 @@ class StructureLoader():
     
     def __iter__(self):
         for batch in self.batches:
-            X, S, mask = protein_featurize(batch)
+            X, S, mask, indices = protein_featurize(batch)
             X[torch.isnan(X)] = 0.
-            yield {'struct':X, 'seq':S, 'mask':mask}
+            yield {'struct':X, 'seq':S, 'mask':mask, 'indices':indices}
 
 
 # strucutre_dataset = StructureDataset('demo.jsonl')

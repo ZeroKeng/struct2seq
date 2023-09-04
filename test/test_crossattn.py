@@ -14,7 +14,7 @@ struct = torch.randn((32,100,120))
 seq = torch.randn((32,100)).to(torch.long)
 
 
-dataset = StructureDataset('./dataset/demo2.jsonl')
+dataset = StructureDataset('./dataset/demo.jsonl')
 dataloader = StructureLoader(dataset=dataset,batch_size=32)
 
 crossattn = CrossAttn(cfg = cfg)

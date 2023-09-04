@@ -2,6 +2,7 @@ from sys import get_coroutine_origin_tracking_depth
 from dataset.data import StructureLoader
 from dataset.data import StructureDataset
 from dataset.featurize import get_coords6d
+from matplotlib import pyplot as plt
 
 if __name__ == '__main__':
     
@@ -11,5 +12,6 @@ if __name__ == '__main__':
     for batch in sl:
         X = batch['struct']
         for i in X:
-            sixd = get_coords6d(i.numpy())
-            print(sixd.shape)
+            i = i.numpy()
+            plt.imshow(i)
+            plt.show()

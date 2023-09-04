@@ -11,6 +11,7 @@ def protein_featurize(batch):
     L = max(lengths)
     X = torch.zeros(B,L,4,3)
     S = torch.zeros(B,L)
+    indices = torch.zeros(B,L,30)
     for i, b in enumerate(batch):
         l = len(b['seq'])
         # structure featurization
@@ -29,12 +30,20 @@ def protein_featurize(batch):
     #mask
     isnan = torch.isnan(X)
     mask = torch.isfinite(torch.sum(X, dim = (2,3)),).float()
+    mask = 1. -mask
     X[isnan] = 0.
-    #print(X.shape)
-    X = torch.stack([torch.Tensor(get_coords6d(np.array(i))) for i in X ])
+    X_new = torch.zeros(B,L,30,4)
+    #X = torch.stack([torch.Tensor(get_coords6d(np.array(i))[0][0]) for i in X ])
+    for i,x in enumerate(X):
+        coords6d, k_indices = get_coords6d(np.array(x))
+        X_new[i] = torch.Tensor(coords6d)
+        indices[i] = torch.Tensor(k_indices)
+    
+    
     #X = torch.cat(torch.Tensor([get_coords6d(np.array(X[i])) for i in range(X.shape[0])]))
-    X = X.reshape((X.shape[0],X.shape[1],-1))
-    return X, S, mask
+    #X = X.reshape((X.shape[0],X.shape[1],-1))
+    X = X_new
+    return X, S, mask, indices
 
 #####This is the 6D coordinates that encode all the protein structure information
 def get_dihedrals(a, b, c, d):
@@ -132,6 +141,8 @@ def get_coords6d(xyz, k=30, dmax=30.0, normalize=True):
         phi6d = (phi6d / math.pi*2) - 1
 
     coords_6d = np.stack([dist6d,omega6d,theta6d,phi6d],axis=-1)
+    indices_sort = np.argsort(indices, axis=1)
+    for i in range(coords_6d.shape[1]):
+        coords_6d[i] = coords_6d[i][indices_sort[i]]
 
-    return coords_6d
-
+    return coords_6d, indices

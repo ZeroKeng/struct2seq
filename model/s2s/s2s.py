@@ -31,6 +31,7 @@ class S2S(nn.Module):
                 seq_padding_mask=None):
         struct = self.struct_inproj(struct)
         seq = self.seq_emb(seq)
+        
         struct = self.pe(struct)
         seq = self.pe(seq)
         seq = self.TRMEncoderLayer(seq,seq_mask,seq_padding_mask)
@@ -84,12 +85,12 @@ class SeqRecover(nn.Module):
         seq = self.LayerNorm(seq)
         return self.outproj(seq)
         
-    def compute_loss(self, struct, seq, struct_mask, struct_padding_mask, seq_padding_mask):
+    def compute_loss(self, struct, seq, seq_real, struct_mask, struct_padding_mask, seq_padding_mask):
         seq_recovered = self.forward(struct, seq, struct_mask, struct_padding_mask, seq_padding_mask)
         # [B,L,21]
         seq_recovered = seq_recovered.reshape(seq_recovered.shape[0] * seq_recovered.shape[1], -1)
-        seq = seq.reshape(seq.shape[0] * seq.shape[1])
-        loss = self.CrossEntropy.forward(seq_recovered,seq)
+        seq_real = seq_real.reshape(seq_real.shape[0] * seq_real.shape[1])
+        loss = self.CrossEntropy.forward(seq_recovered,seq_real)
         return loss
     
 class StructRecover(nn.Module):
